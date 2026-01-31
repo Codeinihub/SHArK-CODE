@@ -20,7 +20,7 @@ def extract_features(df, row, col):
         "Uniformity": uniformity,
 
         "Stability":  stability,
-        "Reproducability": mean,
+        "Reproducibility": mean,
         "Activity": max
     }
 
@@ -48,4 +48,37 @@ for filename in catalyst_files:
                 rows.append(features)
 dataset = pd.DataFrame(rows)
 print(dataset.head())
-# def ParetoSelection():
+"""
+A dominates B if:
+1. A is at least as good as B in every objective
+2. A is strictly better in at least one objective
+
+If that happens → B is dominated, throw it away.
+If no other catalyst dominates A, then A is Pareto-optimal.
+"""
+def dominates(a, b):
+#Returns true if point a dominates point b. With both a and b bieng arrays of [Stability, Reproducability, Activity]
+    return all(a >= b) and any(a>b)
+def pareto_front(points):
+# The parameter 'points' is a numpy array of certain shape.
+# Returns a boolean array indicating Pareto optimal points.
+    n = points.shape[0]
+    is_pareto = np.ones(n, dtype=bool)
+    for i in range(n):
+        for j in range(n):
+            if(i != j and dominates(points.iloc[j], points.iloc[i])):
+                is_pareto[i] = False
+                break
+    return is_pareto
+
+objectives = dataset[["Activity", "Stability", "Reproducibility"]]
+pareto_mask = pareto_front(objectives)
+print(dataset[pareto_mask])
+"""
+EXPLAINATION:
+Because catalyst performance depends on multiple competing objectives, there is no single 
+'best' material. Here pareto optimization is used to identifu catalysts that are not outperformed
+across all metrics simultaneously. This allows for a selction of candidates thatg represent optimal
+tradeoffs between activity, stability and reproducibility.
+
+"""
