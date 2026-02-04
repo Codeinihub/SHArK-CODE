@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 def extract_features(df, row, col):
@@ -73,7 +74,8 @@ def pareto_front(points):
 
 objectives = dataset[["Activity", "Stability", "Reproducibility"]]
 pareto_mask = pareto_front(objectives)
-print(dataset[pareto_mask])
+pareto_set = dataset[pareto_mask]
+print(pareto_set)
 """
 EXPLAINATION:
 Because catalyst performance depends on multiple competing objectives, there is no single 
@@ -82,3 +84,12 @@ across all metrics simultaneously. This allows for a selction of candidates that
 tradeoffs between activity, stability and reproducibility.
 
 """
+
+
+#2D Visualization:
+
+plt.scatter(dataset["Activity"], dataset["Stability"])
+plt.scatter(pareto_set["Activity"], pareto_set["Stability"], color = "red")
+plt.xlabel("Activity (max photocurrent)")
+plt.ylabel("Stability(1/uniformity)")
+plt.show()
