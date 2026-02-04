@@ -87,9 +87,15 @@ tradeoffs between activity, stability and reproducibility.
 
 
 #2D Visualization:
-
-plt.scatter(dataset["Activity"], dataset["Stability"])
-plt.scatter(pareto_set["Activity"], pareto_set["Stability"], color = "red")
+# the red points cannot be improved in one metric without sacrificing one another
+plt.scatter(dataset["Activity"], dataset["Stability"], label = "All Catalysts")
+plt.scatter(pareto_set["Activity"], pareto_set["Stability"], color = "red", label = "Pareto Front")
 plt.xlabel("Activity (max photocurrent)")
 plt.ylabel("Stability(1/uniformity)")
+plt.legend()
 plt.show()
+
+#3D Visualization:
+plt.figure()
+ax = plt.axes(projection = '3d')
+fg = ax.scatter3D(dataset["Activity"], dataset["Stability"], dataset["Reproducibility"])
