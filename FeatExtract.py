@@ -93,9 +93,13 @@ plt.scatter(pareto_set["Activity"], pareto_set["Stability"], color = "red", labe
 plt.xlabel("Activity (max photocurrent)")
 plt.ylabel("Stability(1/uniformity)")
 plt.legend()
-plt.show()
+# plt.show()
 
 #3D Visualization:
 plt.figure()
 ax = plt.axes(projection = '3d')
 fg = ax.scatter3D(dataset["Activity"], dataset["Stability"], dataset["Reproducibility"])
+ax.set_xlabel("Activity")
+ax.set_ylabel("Stability")
+ax.set_zlabel("Reproducibility")
+plt.show()
