@@ -1,4 +1,5 @@
 from pathlib import Path
+from matplotlib.lines import Line2D
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -86,20 +87,80 @@ tradeoffs between activity, stability and reproducibility.
 """
 
 
-#2D Visualization:
+# 2D Visualization:
 # the red points cannot be improved in one metric without sacrificing one another
 plt.scatter(dataset["Activity"], dataset["Stability"], label = "All Catalysts")
 plt.scatter(pareto_set["Activity"], pareto_set["Stability"], color = "red", label = "Pareto Front")
 plt.xlabel("Activity (max photocurrent)")
 plt.ylabel("Stability(1/uniformity)")
 plt.legend()
+plt.show()
+
+# 3D Visualization:
+# fig = plt.figure()
+# ax = fig.add_subplot(projection = '3d')
+# ax.scatter(dataset["Activity"], dataset["Stability"], dataset["Reproducibility"], c = "blue", alpha = 0.4, s = 40)
+# ax.scatter(pareto_set["Activity"], pareto_set["Stability"], pareto_set["Reproducibility"], c = "red", s = 80)
+# ax.set_xlabel("Activity")
+# ax.set_ylabel("Stability")
+# ax.set_zlabel("Reproducibility")
+# legend_elements = [
+#     Line2D([0], [0], marker = 'o', color = 'w', label = "All Catalysts", markersize = 8, markerfacecolor = "blue", alpha = 0.4),
+#     Line2D([0], [0], marker = 'o', color = 'w', label = "Pareto Front", markersize = 10, markerfacecolor = "red")
+# ]
+# ax.legend(handles = legend_elements)
+# ax.view_init(elev = 20, azim = 45)
 # plt.show()
 
-#3D Visualization:
-plt.figure()
-ax = plt.axes(projection = '3d')
-fg = ax.scatter3D(dataset["Activity"], dataset["Stability"], dataset["Reproducibility"])
-ax.set_xlabel("Activity")
-ax.set_ylabel("Stability")
-ax.set_zlabel("Reproducibility")
+#  Utopian Point:
+"""
+Concept: The utopian point represents a hypothetical catalyst that simultaneously achieves the best observed 
+activity, stability, and reproducibility. No real catalyst reaches this point, but it serves as a reference for optimal performance.
+"""
+utopian  = np.array([dataset["Activity"].max(), dataset["Stability"].max(), dataset["Reproducibility"].max()])
+pareto_points = pareto_set[["Activity", "Stability", "Reproducibility"]].values
+# We compute Euclidean distance in objective space:
+distances = np.linalg.norm(pareto_points - utopian, axis = 1)
+# Utopian Visualization
+fig = plt.figure(figsize=(9, 7))
+ax = fig.add_subplot(111, projection='3d')
+
+# All catalysts (background)
+ax.scatter(
+    dataset["Activity"],
+    dataset["Stability"],
+    dataset["Reproducibility"],
+    alpha=0.3,
+    label="All Catalysts"
+)
+
+# Pareto front (colored by distance)
+sc = ax.scatter(
+    pareto_set["Activity"],
+    pareto_set["Stability"],
+    pareto_set["Reproducibility"],
+    c=distances,
+    cmap="Reds_r",  # red = closer
+    s=80,
+    label="Pareto-optimal Catalysts"
+)
+
+# Utopian point
+ax.scatter(
+    utopian[0],
+    utopian[1],
+    utopian[2],
+    c="black",
+    marker="*",
+    s=200,
+    label="Utopian Point"
+)
+
+ax.set_xlabel("Activity (Max Photocurrent)")
+ax.set_ylabel("Stability (1 / Uniformity)")
+ax.set_zlabel("Reproducibility (Mean Response)")
+
+fig.colorbar(sc, ax=ax, label="Distance to Utopian Point")
+ax.legend()
+plt.tight_layout()
 plt.show()
