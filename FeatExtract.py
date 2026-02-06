@@ -117,8 +117,16 @@ plt.show()
 Concept: The utopian point represents a hypothetical catalyst that simultaneously achieves the best observed 
 activity, stability, and reproducibility. No real catalyst reaches this point, but it serves as a reference for optimal performance.
 """
-utopian  = np.array([dataset["Activity"].max(), dataset["Stability"].max(), dataset["Reproducibility"].max()])
-pareto_points = pareto_set[["Activity", "Stability", "Reproducibility"]].values
+norm_dataset = dataset.copy()
+for col in objectives:
+    norm_dataset[col] = (
+        (dataset[col] - dataset[col].min())/
+        (dataset[col].max() - dataset[col].min())
+    )
+norm_pareto = norm_dataset.loc[pareto_set.index]
+utopian = np.array([1.0, 1.0, 1.0])
+objectives = ["Activity", "Stability", "Reproducibility"]
+pareto_points = norm_pareto.loc[:, objectives].to_numpy()
 # We compute Euclidean distance in objective space:
 distances = np.linalg.norm(pareto_points - utopian, axis = 1)
 # Utopian Visualization
