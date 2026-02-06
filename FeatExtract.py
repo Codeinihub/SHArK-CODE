@@ -130,11 +130,56 @@ pareto_points = norm_pareto.loc[:, objectives].to_numpy()
 # We compute Euclidean distance in objective space:
 distances = np.linalg.norm(pareto_points - utopian, axis = 1)
 # Utopian Visualization
-fig = plt.figure(figsize=(9, 7))
-ax = fig.add_subplot(111, projection='3d')
+# fig = plt.figure(figsize=(9, 7))
+# ax = fig.add_subplot(111, projection='3d')
 
-# All catalysts (background)
-ax.scatter(
+# # All catalysts (background)
+# ax.scatter(
+#     dataset["Activity"],
+#     dataset["Stability"],
+#     dataset["Reproducibility"],
+#     alpha=0.3,
+#     label="All Catalysts"
+# )
+
+# # Pareto front (colored by distance)
+# sc = ax.scatter(
+#     pareto_set["Activity"],
+#     pareto_set["Stability"],
+#     pareto_set["Reproducibility"],
+#     c=distances,
+#     cmap="Reds_r",  # red = closer
+#     s=80,
+#     label="Pareto-optimal Catalysts"
+# )
+
+# # Utopian point
+# ax.scatter(
+#     utopian[0],
+#     utopian[1],
+#     utopian[2],
+#     c="black",
+#     marker="*",
+#     s=200,
+#     label="Utopian Point"
+# )
+
+# ax.set_xlabel("Activity (Max Photocurrent)")
+# ax.set_ylabel("Stability (1 / Uniformity)")
+# ax.set_zlabel("Reproducibility (Mean Response)")
+
+# fig.colorbar(sc, ax=ax, label="Distance to Utopian Point")
+# ax.legend()
+# plt.tight_layout()
+# plt.show()
+
+# Label top 3
+top3_index = np.argsort(distances)[:3]
+plt.figure(figsize=(9, 7))
+ax = plt.axes(projection="3d")
+
+# All catalysts
+ax.scatter3D(
     dataset["Activity"],
     dataset["Stability"],
     dataset["Reproducibility"],
@@ -142,33 +187,41 @@ ax.scatter(
     label="All Catalysts"
 )
 
-# Pareto front (colored by distance)
-sc = ax.scatter(
+# Pareto front
+sc = ax.scatter3D(
     pareto_set["Activity"],
     pareto_set["Stability"],
     pareto_set["Reproducibility"],
     c=distances,
-    cmap="Reds_r",  # red = closer
-    s=80,
-    label="Pareto-optimal Catalysts"
+    cmap="Reds_r",
+    s=60,
+    label="Pareto Front"
 )
 
 # Utopian point
-ax.scatter(
-    utopian[0],
-    utopian[1],
-    utopian[2],
-    c="black",
+ax.scatter3D(
+    1, 1, 1,
+    c="blue",
+    s=100,
     marker="*",
-    s=200,
     label="Utopian Point"
 )
 
-ax.set_xlabel("Activity (Max Photocurrent)")
-ax.set_ylabel("Stability (1 / Uniformity)")
-ax.set_zlabel("Reproducibility (Mean Response)")
+# Label top 3
+for i in top3_index:
+    row = pareto_set.iloc[i]
+    ax.text(
+        row["Activity"],
+        row["Stability"],
+        row["Reproducibility"],
+        row["Catalysts"],
+        fontsize=9,
+        color="black"
+    )
 
-fig.colorbar(sc, ax=ax, label="Distance to Utopian Point")
+ax.set_xlabel("Activity")
+ax.set_ylabel("Stability")
+ax.set_zlabel("Reproducibility")
 ax.legend()
-plt.tight_layout()
+plt.colorbar(sc, label="Distance to Utopian Point")
 plt.show()
