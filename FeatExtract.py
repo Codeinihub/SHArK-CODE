@@ -30,8 +30,12 @@ folder_path = Path(r"C:\Users\User\OneDrive\Dokumenty")
 catalyst_files = list(folder_path.glob("*.xls*"))
 
 rows = []
-for filename in catalyst_files:
-    raw_df = pd.read_excel(filename, header=None)
+# def plate_to_cell_conversion(grid, catalyst_file):
+#     for i in range(8):
+#         for c in range(8):
+
+# for filename in catalyst_files:
+#     raw_df = pd.read_excel(filename, header=None)
 
     blank_row_indices = raw_df.index[raw_df.isnull().all(axis=1)].tolist()
     split_rows = [0] + blank_row_indices + [len(raw_df)]
@@ -80,7 +84,7 @@ print(pareto_set)
 """
 EXPLAINATION:
 Because catalyst performance depends on multiple competing objectives, there is no single 
-'best' material. Here pareto optimization is used to identifu catalysts that are not outperformed
+'best' material. Here pareto optimization is used to identify catalysts that are not outperformed
 across all metrics simultaneously. This allows for a selction of candidates thatg represent optimal
 tradeoffs between activity, stability and reproducibility.
 
@@ -94,7 +98,7 @@ plt.scatter(pareto_set["Activity"], pareto_set["Stability"], color = "red", labe
 plt.xlabel("Activity (max photocurrent)")
 plt.ylabel("Stability(1/uniformity)")
 plt.legend()
-plt.show()
+#plt.show()
 
 # 3D Visualization:
 # fig = plt.figure()
@@ -225,3 +229,6 @@ ax.set_zlabel("Reproducibility")
 ax.legend()
 plt.colorbar(sc, label="Distance to Utopian Point")
 plt.show()
+
+
+# Cell Level Conversion:
