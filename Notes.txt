@@ -1,0 +1,8 @@
+Role	                                                                             Governs
+Light absorber	                                                              Band gap, photon absorption
+Structural	                                                                Lattice stability, defect tolerance
+Charge compensator	                                                         Carrier lifetime, recombination
+
+Instead of one row per catalyst plate:
+
+Light_frac	   Structural_frac	   Charge_frac	   Photocurrent 	Catalyst_System

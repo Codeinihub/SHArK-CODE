@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 def extract_features(df, row, col):
-    grid = pd.to_numeric(df.iloc[0:row, 0:col].values.flatten(), errors='coerce').reshape(-1, col)
+    grid = df.iloc[0:row, 0:col].apply(pd.to_numeric, errors='coerce').values
     # Remove NaN values and reshape if needed
     grid_clean = grid[~np.isnan(grid)]
     if len(grid_clean) == 0:
@@ -23,36 +23,66 @@ def extract_features(df, row, col):
 
         "Stability":  stability,
         "Reproducibility": mean,
-        "Activity": max
+        "Activity": max,
+        "Grid" : grid
     }
 
-folder_path = Path(r"C:\Users\User\OneDrive\Dokumenty")
-catalyst_files = list(folder_path.glob("*.xls*"))
+# folder_path = Path(r"C:\Users\User\OneDrive\Dokumenty")
+# catalyst_files = list(folder_path.glob("*.xls*"))
 
+cell_rows = []
 rows = []
-# def plate_to_cell_conversion(grid, catalyst_file):
-#     for i in range(8):
-#         for c in range(8):
+def plate_to_cell_conversion(grid, catalyst_name):
+    # cell_rows = []
+    for r in range(8):
+        for c in range(8):
+            Light = r * 10 
+            Charge = c * 10 
+            Structural = 90 - Light - Charge
 
+            if Structural < 0:
+                continue
+            PhotoCurrent = grid[r][c]
+
+            # if np.isnan(PhotoCurrent):
+            #     continue
+
+            L_Frac = Light/90
+            C_Frac = Charge/90
+            S_Frac = Structural/90
+            cell_rows.append({
+                "L_Frac": L_Frac,
+                "C_Frac": C_Frac,
+                "S_Frac": S_Frac,
+                "PhotoCurrent": PhotoCurrent
+            })
+    return cell_rows
+            
+        
 # for filename in catalyst_files:
-#     raw_df = pd.read_excel(filename, header=None)
+raw_df = pd.read_excel(r"C:\Users\User\OneDrive\Dokumenty\Copy of shark data.xlsx")
 
-    blank_row_indices = raw_df.index[raw_df.isnull().all(axis=1)].tolist()
-    split_rows = [0] + blank_row_indices + [len(raw_df)]
+blank_row_indices = raw_df.index[raw_df.isnull().all(axis=1)].tolist()
+split_rows = [0] + blank_row_indices + [len(raw_df)]
 
-    for i in range(len(split_rows) - 1):
-        start = split_rows[i]
-        end = split_rows[i+1]
-        df_slice = raw_df.iloc[start:end].dropna(how='all').reset_index(drop=True)
+for i in range(len(split_rows) - 1):
+    start = split_rows[i]
+    end = split_rows[i+1]
+    df_slice = raw_df.iloc[start:end].dropna(how='all').reset_index(drop=True)
 
-        if not df_slice.empty:
-            catalyst_name = df_slice.iloc[0, 1]
-            body = df_slice.iloc[1:].reset_index(drop=True)
-            features = extract_features(body, 8, 8)
-            if features is not None:
-                features["Catalysts"] = catalyst_name
-                rows.append(features)
+    if not df_slice.empty:
+        catalyst_name = df_slice.iloc[0, 1]
+        body = df_slice.iloc[1:].reset_index(drop=True)
+        features = extract_features(body, 8, 8)
+        if features is not None:
+            grid = features.pop("Grid")
+            features["Catalysts"] = catalyst_name
+            rows.append(features)
+            cell_data = plate_to_cell_conversion(grid, catalyst_name)
+            cell_rows.extend(cell_data)
 dataset = pd.DataFrame(rows)
+cell_dataset = pd.DataFrame(cell_rows)
+print(cell_dataset.head())
 print(dataset.head())
 """
 A dominates B if:
