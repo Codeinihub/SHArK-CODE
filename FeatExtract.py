@@ -1,6 +1,5 @@
 from pathlib import Path
 from matplotlib.lines import Line2D
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -30,10 +29,10 @@ def extract_features(df, row, col):
 # folder_path = Path(r"C:\Users\User\OneDrive\Dokumenty")
 # catalyst_files = list(folder_path.glob("*.xls*"))
 
-cell_rows = []
 rows = []
+cell_rows = []
 def plate_to_cell_conversion(grid, catalyst_name):
-    # cell_rows = []
+    cell_rows = []
     for r in range(8):
         for c in range(8):
             Light = r * 10 
@@ -51,6 +50,7 @@ def plate_to_cell_conversion(grid, catalyst_name):
             C_Frac = Charge/90
             S_Frac = Structural/90
             cell_rows.append({
+                "Catalyst Name": catalyst_name,
                 "L_Frac": L_Frac,
                 "C_Frac": C_Frac,
                 "S_Frac": S_Frac,
@@ -258,7 +258,27 @@ ax.set_ylabel("Stability")
 ax.set_zlabel("Reproducibility")
 ax.legend()
 plt.colorbar(sc, label="Distance to Utopian Point")
+# plt.show()
+
+
+# Ternary Map:
+ternary_data = cell_dataset.dropna(subset = ["PhotoCurrent"])
+L = ternary_data["L_Frac"].values
+C = ternary_data["C_Frac"].values
+S = ternary_data["S_Frac"].values
+Z = ternary_data["PhotoCurrent"].values
+x = C + 0.5*L
+y = np.sqrt(3)/2 * L
+
+
+fig, ax = plt.subplots(figsize=(7, 6))
+sc = ax.scatter(x, y, c= Z ,cmap= 'Spectral')
+plt.colorbar(sc, label= 'PhotoCurrent')
+plt.title("Ternary_Composition Map")
+plt.xlabel("Charge/Structural Axis")
+plt.ylabel("Light Axis")
+print(cell_dataset.shape)
+print(cell_dataset["PhotoCurrent"].isna().sum())
+print(dataset["Catalysts"].unique())
 plt.show()
-
-
-# Cell Level Conversion:
+# Ternary Map Visualization:

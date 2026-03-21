@@ -6,3 +6,25 @@ Charge compensator	                                                         Carr
 Instead of one row per catalyst plate:
 
 Light_frac	   Structural_frac	   Charge_frac	   Photocurrent 	Catalyst_System
+
+Ternary composition map ignores the physical plate location and instead plots the chemistry ratios. It reveals chemical trends
+and optimal composition regions.
+Which answers the deeper chemistry question:
+What balance of roles produces optimal photocatalysts?
+The goal is to optimize the experiment with machine learning but not replace the science (why) involved.
+
+ML Model should be able to use:
+-L-Frac
+-S_frac
+-C_Frac
+-Element Properties
+To output:
+-PhotoCurrent
+Once trained it should be able to predict new compositions that were never tested. 
+
+Property	                       Meaning
+Electronegativity	       tendency to attract electrons
+Atomic radius	           size of the atom
+Ionization energy	       energy to remove electrons
+Valence electrons	       bonding behavior
+Oxidation states	       catalytic activity potential
