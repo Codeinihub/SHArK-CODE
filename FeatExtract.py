@@ -1,9 +1,11 @@
 from pathlib import Path
 from matplotlib.lines import Line2D
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+
+
+
 def extract_features(df, row, col):
     grid = df.iloc[0:row, 0:col].apply(pd.to_numeric, errors='coerce').values
     # Remove NaN values and reshape if needed
@@ -30,10 +32,77 @@ def extract_features(df, row, col):
 # folder_path = Path(r"C:\Users\User\OneDrive\Dokumenty")
 # catalyst_files = list(folder_path.glob("*.xls*"))
 
-cell_rows = []
+def parse_catalyst(catalyst):
+    elements = []
+    new_letter = ""
+    for letter in catalyst:
+        if letter.isupper() and new_letter != "":
+            elements.append(new_letter)
+            new_letter = letter
+        else:
+            new_letter += letter
+    if new_letter != "":
+        elements.append(new_letter)
+        
+    return elements
+
+# Chemical Charactristics:
+element_properties = {
+    # Light absorbers
+    # Band gaps are oxide forms (e.g. Fe → Fe₂O₃) since these are oxide catalysts
+    # Ionization energies converted to eV (1 eV = 96.485 kJ/mol)
+    # Light absorbers
+    "V":  {"electronegativity": 1.63, "radius": 134, "ionization_eV": 6.74, "oxidation": 5, "oxide_bandgap_eV": 2.2},  # V₂O₅
+    "Cr": {"electronegativity": 1.66, "radius": 128, "ionization_eV": 6.77, "oxidation": 3, "oxide_bandgap_eV": 3.4},  # Cr₂O₃
+    "Mn": {"electronegativity": 1.55, "radius": 127, "ionization_eV": 7.43, "oxidation": 2, "oxide_bandgap_eV": 1.2},  # MnO
+    "Fe": {"electronegativity": 1.83, "radius": 126, "ionization_eV": 7.90, "oxidation": 3, "oxide_bandgap_eV": 2.1},  # Fe₂O₃ — oxidative standard
+    "Co": {"electronegativity": 1.88, "radius": 125, "ionization_eV": 7.88, "oxidation": 2, "oxide_bandgap_eV": 1.7},  # Co₃O₄
+    "Ni": {"electronegativity": 1.91, "radius": 124, "ionization_eV": 7.64, "oxidation": 2, "oxide_bandgap_eV": 3.6},  # NiO
+    "Cu": {"electronegativity": 1.90, "radius": 128, "ionization_eV": 7.72, "oxidation": 2, "oxide_bandgap_eV": 1.5},  # CuO — reductive standard
+
+    # Structural
+    "Al": {"electronegativity": 1.61, "radius": 143, "ionization_eV": 5.98, "oxidation": 3, "oxide_bandgap_eV": 8.8},  # Al₂O₃ — wide gap insulator
+    "Si": {"electronegativity": 1.90, "radius": 111, "ionization_eV": 8.15, "oxidation": 4, "oxide_bandgap_eV": 9.0},  # SiO₂ — insulator
+    "Ti": {"electronegativity": 1.54, "radius": 147, "ionization_eV": 6.82, "oxidation": 4, "oxide_bandgap_eV": 3.1},  # TiO₂
+    "Ga": {"electronegativity": 1.81, "radius": 122, "ionization_eV": 6.00, "oxidation": 3, "oxide_bandgap_eV": 4.8},  # Ga₂O₃
+    "Se": {"electronegativity": 2.55, "radius": 120, "ionization_eV": 9.75, "oxidation": 4, "oxide_bandgap_eV": 3.6},  # SeO₂
+    "Y":  {"electronegativity": 1.22, "radius": 180, "ionization_eV": 6.22, "oxidation": 3, "oxide_bandgap_eV": 5.8},  # Y₂O₃
+    "Zr": {"electronegativity": 1.33, "radius": 160, "ionization_eV": 6.63, "oxidation": 4, "oxide_bandgap_eV": 5.0},  # ZrO₂
+    "Nb": {"electronegativity": 1.60, "radius": 146, "ionization_eV": 6.76, "oxidation": 5, "oxide_bandgap_eV": 3.4},  # Nb₂O₅
+    "Mo": {"electronegativity": 2.16, "radius": 139, "ionization_eV": 7.09, "oxidation": 6, "oxide_bandgap_eV": 2.9},  # MoO₃
+    "In": {"electronegativity": 1.78, "radius": 167, "ionization_eV": 5.78, "oxidation": 3, "oxide_bandgap_eV": 2.9},  # In₂O₃
+    "Sn": {"electronegativity": 1.96, "radius": 141, "ionization_eV": 7.35, "oxidation": 4, "oxide_bandgap_eV": 3.6},  # SnO₂
+    "Hf": {"electronegativity": 1.30, "radius": 159, "ionization_eV": 6.83, "oxidation": 4, "oxide_bandgap_eV": 5.8},  # HfO₂
+    "Ta": {"electronegativity": 1.50, "radius": 146, "ionization_eV": 7.89, "oxidation": 5, "oxide_bandgap_eV": 3.9},  # Ta₂O₅
+    "W":  {"electronegativity": 2.36, "radius": 139, "ionization_eV": 7.98, "oxidation": 6, "oxide_bandgap_eV": 2.7},  # WO₃
+
+    # Charge compensators
+    "Li": {"electronegativity": 0.98, "radius": 152, "ionization_eV": 5.39, "oxidation": 1, "oxide_bandgap_eV": 8.0},  # Li₂O
+    "Na": {"electronegativity": 0.93, "radius": 186, "ionization_eV": 5.14, "oxidation": 1, "oxide_bandgap_eV": 5.0},  # Na₂O
+    "Mg": {"electronegativity": 1.31, "radius": 160, "ionization_eV": 7.65, "oxidation": 2, "oxide_bandgap_eV": 7.8},  # MgO
+    "K":  {"electronegativity": 0.82, "radius": 227, "ionization_eV": 4.34, "oxidation": 1, "oxide_bandgap_eV": 7.0},  # K₂O
+    "Ca": {"electronegativity": 1.00, "radius": 197, "ionization_eV": 6.11, "oxidation": 2, "oxide_bandgap_eV": 7.1},  # CaO
+    "Zn": {"electronegativity": 1.65, "radius": 134, "ionization_eV": 9.39, "oxidation": 2, "oxide_bandgap_eV": 3.4},  # ZnO
+    "Rb": {"electronegativity": 0.82, "radius": 248, "ionization_eV": 4.18, "oxidation": 1, "oxide_bandgap_eV": 7.0},  # Rb₂O
+    "Sr": {"electronegativity": 0.95, "radius": 215, "ionization_eV": 5.70, "oxidation": 2, "oxide_bandgap_eV": 5.3},  # SrO
+    "Cd": {"electronegativity": 1.69, "radius": 151, "ionization_eV": 9.00, "oxidation": 2, "oxide_bandgap_eV": 2.2},  # CdO
+    "Cs": {"electronegativity": 0.79, "radius": 265, "ionization_eV": 3.90, "oxidation": 1, "oxide_bandgap_eV": 7.0},  # Cs₂O
+    "Ba": {"electronegativity": 0.89, "radius": 222, "ionization_eV": 5.21, "oxidation": 2, "oxide_bandgap_eV": 3.8},  # BaO
+}
+
 rows = []
+cell_rows = []
 def plate_to_cell_conversion(grid, catalyst_name):
-    # cell_rows = []
+    cell_rows = []
+    if pd.isna(catalyst_name):
+        return cell_rows
+    elements = parse_catalyst(catalyst_name)
+    if(len(elements) < 3):
+        return cell_rows
+
+    light_prop = element_properties[elements[0]]
+    struct_prop = element_properties[elements[1]]
+    charge_prop = element_properties[elements[2]]
     for r in range(8):
         for c in range(8):
             Light = r * 10 
@@ -51,14 +120,30 @@ def plate_to_cell_conversion(grid, catalyst_name):
             C_Frac = Charge/90
             S_Frac = Structural/90
             cell_rows.append({
+                "Catalyst Name": catalyst_name,
                 "L_Frac": L_Frac,
                 "C_Frac": C_Frac,
                 "S_Frac": S_Frac,
+                "L_Electro": light_prop["electronegativity"],
+                "C_Electro": charge_prop["electronegativity"],
+                "S_Electro": struct_prop["electronegativity"],
+                "L_Radius": light_prop["radius"],
+                "C_Radius": charge_prop["radius"],
+                "S_Radius": struct_prop["radius"],
+                "L_Ionization_eV": light_prop["ionization_eV"],
+                "C_Ionization_eV": charge_prop["ionization_eV"],
+                "S_Ionization_eV": struct_prop["ionization_eV"],
+                "L_Oxidation": light_prop["oxidation"],
+                "C_Oxidation": charge_prop["oxidation"],
+                "S_Oxidation": struct_prop["oxidation"],
+                "L_BandGap": light_prop["oxide_bandgap_eV"],
+                "C_BandGap": charge_prop["oxide_bandgap_eV"],
+                "S_BandGap": struct_prop["oxide_bandgap_eV"],
                 "PhotoCurrent": PhotoCurrent
             })
     return cell_rows
             
-        
+'''READING DATA'''       
 # for filename in catalyst_files:
 raw_df = pd.read_excel(r"C:\Users\User\OneDrive\Dokumenty\Copy of shark data.xlsx")
 
@@ -81,6 +166,9 @@ for i in range(len(split_rows) - 1):
             cell_data = plate_to_cell_conversion(grid, catalyst_name)
             cell_rows.extend(cell_data)
 dataset = pd.DataFrame(rows)
+dataset = dataset[dataset["Catalysts"].apply(
+    lambda x: not pd.isna(x) and len(parse_catalyst(x)) == 3
+)].reset_index(drop=True)
 cell_dataset = pd.DataFrame(cell_rows)
 print(cell_dataset.head())
 print(dataset.head())
@@ -164,48 +252,6 @@ pareto_points = norm_pareto.loc[:, objectives].to_numpy()
 # We compute Euclidean distance in objective space:
 distances = np.linalg.norm(pareto_points - utopian, axis = 1)
 # Utopian Visualization
-# fig = plt.figure(figsize=(9, 7))
-# ax = fig.add_subplot(111, projection='3d')
-
-# # All catalysts (background)
-# ax.scatter(
-#     dataset["Activity"],
-#     dataset["Stability"],
-#     dataset["Reproducibility"],
-#     alpha=0.3,
-#     label="All Catalysts"
-# )
-
-# # Pareto front (colored by distance)
-# sc = ax.scatter(
-#     pareto_set["Activity"],
-#     pareto_set["Stability"],
-#     pareto_set["Reproducibility"],
-#     c=distances,
-#     cmap="Reds_r",  # red = closer
-#     s=80,
-#     label="Pareto-optimal Catalysts"
-# )
-
-# # Utopian point
-# ax.scatter(
-#     utopian[0],
-#     utopian[1],
-#     utopian[2],
-#     c="black",
-#     marker="*",
-#     s=200,
-#     label="Utopian Point"
-# )
-
-# ax.set_xlabel("Activity (Max Photocurrent)")
-# ax.set_ylabel("Stability (1 / Uniformity)")
-# ax.set_zlabel("Reproducibility (Mean Response)")
-
-# fig.colorbar(sc, ax=ax, label="Distance to Utopian Point")
-# ax.legend()
-# plt.tight_layout()
-# plt.show()
 
 # Label top 3
 top3_index = np.argsort(distances)[:3]
@@ -258,7 +304,30 @@ ax.set_ylabel("Stability")
 ax.set_zlabel("Reproducibility")
 ax.legend()
 plt.colorbar(sc, label="Distance to Utopian Point")
+# plt.show()
+
+
+# Ternary Map:
+ternary_data = cell_dataset.dropna(subset = ["PhotoCurrent"])
+L = ternary_data["L_Frac"].values
+C = ternary_data["C_Frac"].values
+S = ternary_data["S_Frac"].values
+Z = ternary_data["PhotoCurrent"].values
+x = C + 0.5*L
+y = np.sqrt(3)/2 * L
+
+
+fig, ax = plt.subplots(figsize=(7, 6))
+sc = ax.scatter(x, y, c= Z ,cmap= 'Spectral')
+plt.colorbar(sc, label= 'PhotoCurrent')
+plt.title("Ternary_Composition Map")
+plt.xlabel("Charge/Structural Axis")
+plt.ylabel("Light Axis")
+print(cell_dataset.shape)
+print(cell_dataset["PhotoCurrent"].isna().sum())
+print(dataset["Catalysts"].unique())
 plt.show()
 
 
-# Cell Level Conversion:
+
+
