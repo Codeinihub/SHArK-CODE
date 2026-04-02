@@ -147,31 +147,56 @@ def plate_to_cell_conversion(grid, catalyst_name):
 # for filename in catalyst_files:
 raw_df = pd.read_excel(r"C:\Users\User\OneDrive\Dokumenty\Copy of shark data.xlsx")
 
-blank_row_indices = raw_df.index[raw_df.isnull().all(axis=1)].tolist()
+blank_row_indices = raw_df.index[raw_df.iloc[:, 0:9].isnull().all(axis=1)].tolist()
 split_rows = [0] + blank_row_indices + [len(raw_df)]
+data_starts = raw_df[raw_df.iloc[:, 1].notnull()].index.tolist()
 
-for i in range(len(split_rows) - 1):
-    start = split_rows[i]
-    end = split_rows[i+1]
-    df_slice = raw_df.iloc[start:end].dropna(how='all').reset_index(drop=True)
+# Filter data_starts to only include the first row of each 8x8 block 
+# (assuming blocks are separated by at least one row)
+actual_starts = []
+if data_starts:
+    actual_starts.append(data_starts[0])
+    for i in range(1, len(data_starts)):
+        if data_starts[i] > data_starts[i-1] + 1:
+            actual_starts.append(data_starts[i])
 
-    if not df_slice.empty:
-        catalyst_name = df_slice.iloc[0, 1]
-        body = df_slice.iloc[1:].reset_index(drop=True)
-        features = extract_features(body, 8, 8)
-        if features is not None:
-            grid = features.pop("Grid")
-            features["Catalysts"] = catalyst_name
-            rows.append(features)
-            cell_data = plate_to_cell_conversion(grid, catalyst_name)
-            cell_rows.extend(cell_data)
+for start in actual_starts:
+    # Each block is 8x8, so we take the start row + 8 more
+    df_slice = raw_df.iloc[start : start + 9].reset_index(drop=True)
+    
+    catalyst_name = df_slice.iloc[0, 1]
+    
+    # If the name is 'nan' or empty, skip it
+    if pd.isna(catalyst_name) or str(catalyst_name).lower() == 'nan':
+        continue
+        
+    # Your 8x8 grid starts after the name/header row
+    body = df_slice.iloc[1:9].reset_index(drop=True) 
+    
+    print(f"Processing Catalyst: {catalyst_name}, Shape: {body.shape}")
+    # print(f"Rows {start}-{end}: {catalyst_name}, body shape: {body.shape}")
+    features = extract_features(body, 8, 8)
+    if features is None:
+        print(f"  → extract_features returned None for {catalyst_name}")
+        continue
+    if features is not None:
+        grid = features.pop("Grid")
+        features["Catalysts"] = catalyst_name
+        rows.append(features)
+        cell_data = plate_to_cell_conversion(grid, catalyst_name)
+        cell_rows.extend(cell_data)
+print(f"Total rows: {len(raw_df)}")
+print(f"Blank rows found at: {blank_row_indices}")
+print(f"Number of splits: {len(split_rows)-1}")
+# print(raw_df.iloc[0:99].to_string())
 dataset = pd.DataFrame(rows)
 dataset = dataset[dataset["Catalysts"].apply(
     lambda x: not pd.isna(x) and len(parse_catalyst(x)) == 3
 )].reset_index(drop=True)
 cell_dataset = pd.DataFrame(cell_rows)
-print(cell_dataset.head())
-print(dataset.head())
+print(cell_dataset)
+print(dataset)
+
 """
 A dominates B if:
 1. A is at least as good as B in every objective

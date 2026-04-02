@@ -28,3 +28,9 @@ Atomic radius	           size of the atom
 Ionization energy	       energy to remove electrons
 Valence electrons	       bonding behavior
 Oxidation states	       catalytic activity potential
+
+Next(Moost likely using random forest):
+New composition :   Model predicts photocurrent
+                    Also predicts activity/stability/reproducibility
+                    Pareto filter finds the efficient frontier
+                    "These novel compositions are both high-performing AND optimal tradeoffs"
